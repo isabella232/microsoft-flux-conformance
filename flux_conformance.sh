@@ -109,7 +109,9 @@ az k8s-extension create \
     --release-train $FLUX_RELEASE_TRAIN \
     --name flux \
     --release-namespace $FLUX_RELEASE_NAMESPACE \
-    --version $FLUX_VERSION 2> ${results_dir}/error || python3 setup_failure_handler.py
+    --config image-automation-controller.enabled=true \
+    --config image-reflector-controller.enabled=true \
+    --version $FLUX_VERSION 2> ${results_dir}/error || python3 setup_failure_handler.py 
 
 # Wait for resources in osm-arc release ns
 waitSuccessArc="$(waitForResources deployment $FLUX_RELEASE_NAMESPACE)"
