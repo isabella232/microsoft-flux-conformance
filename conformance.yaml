@@ -3,7 +3,7 @@ sonobuoy-config:
   plugin-name: azure-arc-flux
   result-format: junit
 spec:
-  image: azurearcfork8sdev.azurecr.io/azurearcflux/conformance-testing:latest
+  image: joinnisacr.azurecr.io/conformance:latest
   imagePullPolicy: Always
   name: plugin
   resources: {}

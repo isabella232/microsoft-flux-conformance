@@ -1,105 +1,143 @@
 #!/bin/bash
-
 set -x
-set -e
 
 results_dir="${RESULTS_DIR:-/tmp/results}"
 
-function waitForResources {
-    available=false
+waitForResourcesReady() {
+    ready=false
     max_retries=60
     sleep_seconds=10
-    RESOURCE=$1
-    NAMESPACE=$2
+    NAMESPACE=$1
+    RESOURCETYPE=$2
+	  RESOURCE=$3
+    # if resource not specified, set to --all
+    if [ -z $RESOURCE ]; then
+       RESOURCE="--all"
+    fi
     for i in $(seq 1 $max_retries)
     do
-    if [[ ! $(kubectl wait --for=condition=available ${RESOURCE} --all --namespace ${NAMESPACE}) ]]; then
+    if [[ ! $(kubectl wait --for=condition=Ready ${RESOURCETYPE} ${RESOURCE} --namespace ${NAMESPACE}) ]]; then
+        echo "waiting for the resource:${RESOURCE} of the type:${RESOURCETYPE} in namespace:${NAMESPACE} to be ready state, iteration:${i}"
         sleep ${sleep_seconds}
     else
-        available=true
+        echo "resource:${RESOURCE} of the type:${RESOURCETYPE} in namespace:${NAMESPACE} in ready state"
+        ready=true
         break
     fi
     done
-    
-    echo "$available"
+
+    echo "waitForResourcesReady state: $ready"
 }
 
-# saveResults prepares the results for handoff to the Sonobuoy worker.
-# See: https://github.com/vmware-tanzu/sonobuoy/blob/master/docs/plugins.md
-saveResults() {
-  cd ${results_dir}
 
-    # Sonobuoy worker expects a tar file.
-	tar czf results.tar.gz *
-
-	# Signal to the worker that we are done and where to find the results.
-	printf ${results_dir}/results.tar.gz > ${results_dir}/done
+waitForArcK8sClusterCreated() {
+    connectivityState=false
+    max_retries=60
+    sleep_seconds=10
+    for i in $(seq 1 $max_retries)
+    do
+      echo "iteration: ${i}, clustername: ${CLUSTER_NAME}, resourcegroup: ${RESOURCE_GROUP}"
+      clusterState=$(az connectedk8s show --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --query connectivityStatus -o json)
+      clusterState=$(echo $clusterState | tr -d '"' | tr -d '"\r\n')
+      echo "cluster current state: ${clusterState}"
+      if [ ! -z "$clusterState" ]; then
+         if [[ ("${clusterState}" == "Connected") || ("${clusterState}" == "Connecting") ]]; then
+            connectivityState=true
+            break
+         fi
+      fi
+      sleep ${sleep_seconds}
+    done
+    echo "Arc K8s cluster connectivityState: $connectivityState"
 }
 
-# Ensure that we tell the Sonobuoy worker we are done regardless of results.
-trap saveResults EXIT
+waitForCIExtensionInstalled() {
+    installedState=false
+    max_retries=60
+    sleep_seconds=10
+    for i in $(seq 1 $max_retries)
+    do
+      echo "iteration: ${i}, clustername: ${CLUSTER_NAME}, resourcegroup: ${RESOURCE_GROUP}"
+      provisioningState=$(az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP  --cluster-type $CLUSTER_TYPE --name flux --query provisioningState -o json)
+      provisioningState=$(echo $provisioningState | tr -d '"' | tr -d '"\r\n')
+      echo "extension provisioning state: ${provisioningState}"
+      if [ ! -z "$provisioningState" ]; then
+         if [ "${provisioningState}" == "Succeeded" ]; then
+            break
+         fi
+      fi
+      sleep ${sleep_seconds}
+    done
+    echo "microsoft.flux extension installed"
+}
 
-if [[ -z "${TENANT_ID}" ]]; then
-  echo "ERROR: parameter TENANT_ID is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+validateCommonParameters() {
+    if [ -z $TENANT_ID ]; then
+	   echo "ERROR: parameter TENANT_ID is required." > ${results_dir}/error
+	   python3 setup_failure_handler.py
+	fi
+	if [ -z $CLIENT_ID ]; then
+	   echo "ERROR: parameter CLIENT_ID is required." > ${results_dir}/error
+	   python3 setup_failure_handler.py
+	fi
 
-if [[ -z "${SUBSCRIPTION_ID}" ]]; then
-  echo "ERROR: parameter SUBSCRIPTION_ID is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+	if [ -z $CLIENT_SECRET ]; then
+	   echo "ERROR: parameter CLIENT_SECRET is required." > ${results_dir}/error
+	   python3 setup_failure_handler.py
+	fi
+}
 
-if [[ -z "${RESOURCE_GROUP}" ]]; then
-  echo "ERROR: parameter RESOURCE_GROUP is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+validateArcConfTestParameters() {
+	if [ -z $SUBSCRIPTION_ID ]; then
+	   echo "ERROR: parameter SUBSCRIPTION_ID is required." > ${results_dir}/error
+	   python3 setup_failure_handler.py
+	fi
 
-if [[ -z "${CLUSTER_NAME}" ]]; then
-  echo "ERROR: parameter CLUSTER_NAME is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+	if [ -z $RESOURCE_GROUP ]]; then
+		echo "ERROR: parameter RESOURCE_GROUP is required." > ${results_dir}/error
+		python3 setup_failure_handler.py
+	fi
 
-if [[ -z "${CLIENT_ID}" ]]; then
-  echo "ERROR: parameter CLIENT_ID is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+	if [ -z $CLUSTER_NAME ]; then
+		echo "ERROR: parameter CLUSTER_NAME is required." > ${results_dir}/error
+		python3 setup_failure_handler.py
+	fi
 
-if [[ -z "${CLIENT_SECRET}" ]]; then
-  echo "ERROR: parameter CLIENT_SECRET is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+  if [ -z $CLUSTER_TYPE ]; then
+		echo "ERROR: parameter CLUSTER_TYPE is required." > ${results_dir}/error
+		python3 setup_failure_handler.py
+	fi
 
-if [[ -z "${FLUX_RELEASE_TRAIN}" ]]; then
+  if [[ -z "${FLUX_RELEASE_TRAIN}" ]]; then
   echo "ERROR: parameter FLUX_RELEASE_TRAIN is required." > ${results_dir}/error
   python3 setup_failure_handler.py
-fi
+  fi
 
-if [[ -z "${FLUX_RELEASE_NAMESPACE}" ]]; then
-  echo "ERROR: parameter FLUX_RELEASE_NAMESPACE is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+  if [[ -z "${FLUX_RELEASE_NAMESPACE}" ]]; then
+    echo "ERROR: parameter FLUX_RELEASE_NAMESPACE is required." > ${results_dir}/error
+    python3 setup_failure_handler.py
+  fi
 
-if [[ -z "${FLUX_VERSION}" ]]; then
-  echo "ERROR: parameter FLUX_VERSION is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-fi
+  if [[ -z "${FLUX_VERSION}" ]]; then
+    echo "ERROR: parameter FLUX_VERSION is required." > ${results_dir}/error
+    python3 setup_failure_handler.py
+  fi
+}
 
-# Login with service principal
-az login --service-principal \
-  -u ${CLIENT_ID} \
-  -p ${CLIENT_SECRET} \
-  --tenant ${TENANT_ID} 2> ${results_dir}/error || python3 setup_failure_handler.py
+addArcConnectedK8sExtension() {
+   echo "adding Arc K8s connectedk8s extension"
+   az extension add --name connectedk8s 2> ${results_dir}/error || python3 setup_failure_handler.py
+}
 
-# Wait for resources in ARC ns
-waitSuccessArc="$(waitForResources deployment azure-arc)"
-if [ "${waitSuccessArc}" == false ]; then
-    echo "deployment is not avilable in namespace - azure-arc"
-    exit 1
-fi
+addArcK8sCLIExtension() {
+   echo "adding Arc K8s k8s-extension extension"
+   az extension add --name k8s-extension
+}
 
-az extension add --name k8s-extension 2> ${results_dir}/error || python3 setup_failure_handler.py
-
-az k8s-extension create \
+createArcCIExtension() {
+	echo "creating extension type: Microsoft.Flux"
+  
+  az k8s-extension create \
     --cluster-name $CLUSTER_NAME \
     --resource-group $RESOURCE_GROUP \
     --cluster-type connectedClusters \
@@ -112,14 +150,85 @@ az k8s-extension create \
     --config image-automation-controller.enabled=true \
     --config image-reflector-controller.enabled=true \
     --version $FLUX_VERSION 2> ${results_dir}/error || python3 setup_failure_handler.py 
+}
 
-# Wait for resources in osm-arc release ns
-waitSuccessArc="$(waitForResources deployment $FLUX_RELEASE_NAMESPACE)"
-if [ "${waitSuccessArc}" == false ]; then
-    echo "deployment is not avilable in namespace - $FLUX_RELEASE_NAMESPACE"
-    exit 1
-fi
+showArcCIExtension() {
+  echo "arc ci extension status"
+  az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP  --cluster-type $CLUSTER_TYPE --name flux
+}
 
-sleep 60
+deleteArcCIExtension() {
+    az k8s-extension delete --name flux \
+    --cluster-type $CLUSTER_TYPE \
+	  --cluster-name $CLUSTER_NAME \
+	  --resource-group $RESOURCE_GROUP --yes
+}
 
-kubectl delete ns $FLUX_RELEASE_NAMESPACE
+login_to_azure() {
+	# Login with service principal
+    echo "login to azure using the SP creds"
+	az login --service-principal \
+	-u ${CLIENT_ID} \
+	-p ${CLIENT_SECRET} \
+	--tenant ${TENANT_ID} 2> ${results_dir}/error || python3 setup_failure_handler.py
+
+	echo "setting subscription: ${SUBSCRIPTION_ID} as default subscription"
+	az account set -s $SUBSCRIPTION_ID
+}
+
+
+# saveResults prepares the results for handoff to the Sonobuoy worker.
+# See: https://github.com/vmware-tanzu/sonobuoy/blob/master/docs/plugins.md
+saveResults() {
+    cd ${results_dir}
+
+    # Sonobuoy worker expects a tar file.
+	tar czf results.tar.gz *
+
+	# Signal to the worker that we are done and where to find the results.
+	printf ${results_dir}/results.tar.gz > ${results_dir}/done
+}
+
+# Ensure that we tell the Sonobuoy worker we are done regardless of results.
+trap saveResults EXIT
+
+# validate common params
+validateCommonParameters
+
+# validate params
+validateArcConfTestParameters
+
+# login to azure
+login_to_azure
+
+# add arc k8s connectedk8s extension
+addArcConnectedK8sExtension
+
+# wait for arc k8s pods to be ready state
+waitForResourcesReady azure-arc pods
+
+# wait for Arc K8s cluster to be created
+waitForArcK8sClusterCreated
+
+# add CLI extension
+addArcK8sCLIExtension
+
+# add ARC K8s container insights extension
+createArcCIExtension
+
+# show the ci extension status
+showArcCIExtension
+
+#wait for extension state to be installed
+waitForCIExtensionInstalled
+
+# The variable 'TEST_LIST' should be provided if we want to run specific tests. If not provided, all tests are run
+
+NUM_PROCESS=$(pytest /test/ --collect-only  -k "$TEST_NAME_LIST" -m "$TEST_MARKER_LIST" | grep "<Function\|<Class" -c)
+
+export NUM_TESTS="$NUM_PROCESS"
+
+pytest /test/ --junitxml=/tmp/results/results.xml -d --tx "$NUM_PROCESS"*popen -k "$TEST_NAME_LIST" -m "$TEST_MARKER_LIST"
+
+# cleanup extension resource
+deleteArcCIExtension

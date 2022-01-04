@@ -67,7 +67,7 @@ def env_dict():
             api_instance = client.CoreV1Api()
             
             # Cleaning up resources created by default configurations
-            print("Cleaning up the resources create by the flux operators")
+            print("Cleaning up the resources created by the flux operators")
             cleanup_namespace_list = constants.CLEANUP_NAMESPACE_LIST
             namespace_list = list_namespace(api_instance)
             for ns in namespace_list.items:
