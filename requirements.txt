@@ -1,0 +1,9 @@
+pytest
+pytest-xdist
+filelock
+junit_xml
+kubernetes
+azure.identity
+msrestazure
+azure-mgmt-hybridkubernetes
+azure-mgmt-kubernetesconfiguration==1.0.0

@@ -1,6 +1,7 @@
 FROM python:3.9
 
-RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pytest pytest-xdist filelock junit_xml kubernetes azure.identity msrestazure azure-mgmt-hybridkubernetes azure-mgmt-kubernetesconfiguration==1.0.0b1
+ADD ./requirements.txt /requirements.txt
+RUN pip install --trusted-host pypi.org -r requirements.txt
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 

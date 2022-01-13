@@ -1,0 +1,10 @@
+export TENANT_ID=<TENANT-ID>
+export CLIENT_ID=<CLIENT-ID>
+export OBJECT_ID=<OBJECT-ID>
+export CLIENT_SECRET=<CLIENT-SECRET>
+export SUBSCRIPTION_ID=<SUBSCRIPTION-ID>
+export RESOURCE_GROUP=<RESOURCE-GROUP>
+export CLUSTER_NAME=conformance-testing-arc-$RANDOM
+export LOCATION=eastus
+export RESULTS_DIR=./results
+export CUSTOM_KUBECONFIG=~/.kube/config

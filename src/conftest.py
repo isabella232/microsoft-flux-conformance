@@ -20,8 +20,11 @@ def env_dict():
     with FileLock(str(my_file) + ".lock"):  # Locking the file since each test will be run in parallel as separate subprocesses and may try to access the file simultaneously.
         env_dict = {}
         if not my_file.is_file():
-
-            env_dict['TEST_FLUX_CONFIGURATION_DEFAULT_LOG_FILE'] = '/tmp/results/default_case'
+            results_dir = os.getenv('RESULTS_DIR')
+            if not results_dir:
+                results_dir = '/tmp/results'
+            env_dict['RESULTS_DIR'] = results_dir
+            env_dict['CUSTOM_KUBECONFIG'] = os.getenv('CUSTOM_KUBECONFIG')
             env_dict['NUM_TESTS_COMPLETED'] = 0
 
             # Collecting environment variables
@@ -61,7 +64,11 @@ def env_dict():
 
             # Loading in-cluster kube config
             try:
-                config.load_incluster_config()
+                custom_kubeconfig = env_dict['CUSTOM_KUBECONFIG']
+                if custom_kubeconfig:
+                    config.load_kube_config(config_file=custom_kubeconfig)
+                else:
+                    config.load_incluster_config()
             except Exception as e:
                 pytest.fail("Error loading the in-cluster config: " + str(e))
             api_instance = client.CoreV1Api()

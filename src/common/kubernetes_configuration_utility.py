@@ -10,13 +10,13 @@ from azure.mgmt.kubernetesconfiguration.v2022_01_01_preview.models import (
 
 
 # This function returns the python client to interact with resources under the namespace 'Microsoft.KubernetesConfiguration'
-def get_kubernetes_configuration_client(credential, subscription_id, base_url=None, credential_scopes=None):
-    return SourceControlConfigurationClient(credential, subscription_id, base_url=base_url, credential_scopes=credential_scopes)
+def get_kubernetes_configuration_client(credential, subscription_id, base_url=None, credential_scopes=None, api_version=None):
+    return SourceControlConfigurationClient(credential, subscription_id, base_url=base_url, credential_scopes=credential_scopes, api_version=api_version)
 
 # This function returns the python client to interact with the connected cluster resource
-def get_flux_configuration_client(credential, subscription_id, base_url=None, credential_scopes=None):
+def get_flux_configuration_client(credential, subscription_id, base_url=None, credential_scopes=None, api_version=None):
     try:
-        return get_kubernetes_configuration_client(credential, subscription_id, base_url=base_url, credential_scopes=credential_scopes).flux_configurations
+        return get_kubernetes_configuration_client(credential, subscription_id, base_url=base_url, credential_scopes=credential_scopes, api_version=api_version).flux_configurations
     except Exception as e:
         pytest.fail("Error occured while creating source control configuration client: " + str(e))
 
@@ -41,7 +41,7 @@ def create_flux_configuration(kc_client, resource_group_name, cluster_rp, cluste
         kustomizations=kustomizations
     )
     try:
-        return kc_client.create_or_update(resource_group_name, cluster_rp, cluster_type, cluster_name, configuration_name, flux_configuration)
+        return kc_client.begin_create_or_update(resource_group_name, cluster_rp, cluster_type, cluster_name, configuration_name, flux_configuration)
     except Exception as e:
         pytest.fail("Error occurred while creating the kubernetes configuration resource: " + str(e))
 

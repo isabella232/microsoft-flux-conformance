@@ -144,17 +144,15 @@ createArcCIExtension() {
     --extension-type Microsoft.Flux \
     --subscription $SUBSCRIPTION_ID \
     --scope cluster \
-    --release-train $FLUX_RELEASE_TRAIN \
     --name flux \
-    --release-namespace $FLUX_RELEASE_NAMESPACE \
     --config image-automation-controller.enabled=true \
     --config image-reflector-controller.enabled=true \
-    --version $FLUX_VERSION 2> ${results_dir}/error || python3 setup_failure_handler.py 
+    --no-wait 2> ${results_dir}/error || python3 setup_failure_handler.py 
 }
 
 showArcCIExtension() {
   echo "arc ci extension status"
-  az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP  --cluster-type $CLUSTER_TYPE --name flux
+  az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --cluster-type $CLUSTER_TYPE --name flux
 }
 
 deleteArcCIExtension() {
@@ -180,9 +178,9 @@ login_to_azure() {
 # saveResults prepares the results for handoff to the Sonobuoy worker.
 # See: https://github.com/vmware-tanzu/sonobuoy/blob/master/docs/plugins.md
 saveResults() {
-    cd ${results_dir}
+   cd ${results_dir}
 
-    # Sonobuoy worker expects a tar file.
+   # Sonobuoy worker expects a tar file.
 	tar czf results.tar.gz *
 
 	# Signal to the worker that we are done and where to find the results.

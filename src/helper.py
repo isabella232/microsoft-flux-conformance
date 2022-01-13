@@ -155,7 +155,7 @@ def check_kubernetes_configuration_state(kc_client, resource_group, cluster_rp, 
         get_kc_response = show_kubernetes_configuration(kc_client, resource_group, cluster_rp, cluster_type, cluster_name, configuration_name)
         provisioning_state = get_kc_response.provisioning_state
         append_result_output("Provisioning State: {}\n".format(provisioning_state), outfile)
-        compliance_state = get_kc_response.compliance_state
+        compliance_state = get_kc_response.compliance_state or "Unknown"
         append_result_output("Compliance State: {}\n".format(compliance_state), outfile)
         if (provisioning_state == 'Succeeded' and compliance_state == 'Compliant'):
             break

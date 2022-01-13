@@ -1,4 +1,5 @@
 import pytest
+import os
 from common.kubernetes_configuration_utility import create_flux_configuration, get_flux_configuration_client
 import common.constants as constants
 
@@ -13,7 +14,7 @@ pytestmark = pytest.mark.microsoftfluxtest
 
 
 # validate all the critical resources such as ds, rs, ds pods and rs pod etc. are up and running
-def test_create_flux_config(env_dict):
+def test_create_flux_config_default(env_dict):
     tenant_id = env_dict.get('TENANT_ID')
     if not tenant_id:
         pytest.fail('ERROR: variable TENANT_ID is required.')
@@ -54,26 +55,35 @@ def test_create_flux_config(env_dict):
     credential = fetch_aad_token_credentials(tenant_id, client_id, client_secret, cloud.endpoints.active_directory)
     print("Successfully fetched credentials object.")
 
-    kc_client = get_flux_configuration_client(credential, subscription_id, base_url=cloud.endpoints.resource_manager, credential_scopes=[cloud.endpoints.resource_manager + "/.default"])
+    # flux_config_creation_args
+    # stdout, stderr = subprocess.Popen(['az','k8s-configuration','flux','create','-g',resource_group,'-t',cluster_type,'-c',cluster_name,'-n',configuration_name,'-u'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    # if len(stderr) > 0:
+
+    kc_client = get_flux_configuration_client(credential, subscription_id, base_url=cloud.endpoints.resource_manager, credential_scopes=[cloud.endpoints.resource_manager + "/.default"], api_version='2022-01-01-preview')
     put_kc_response = create_flux_configuration(kc_client, resource_group, cluster_rp, cluster_type, cluster_name, configuration_name, repository_url, paths, namespace, branch, scope)
-    append_result_output("Create config response: {}\n".format(put_kc_response), env_dict['TEST_KUBERNETES_CONFIG_FOP_LOG_FILE'])
+    append_result_output("Create config response: {}\n".format(put_kc_response), os.path.join(env_dict['RESULTS_DIR'], 'default.log'))
     print("Successfully requested the creation of kubernetes configuration resource.")
 
     # Checking the compliance of kubernetes configuration resource
     timeout_seconds = env_dict.get('TIMEOUT')
-    check_kubernetes_configuration_state(kc_client, resource_group, cluster_rp, cluster_type, cluster_name, configuration_name, env_dict['TEST_KUBERNETES_CONFIG_FOP_LOG_FILE'], timeout_seconds)
+    check_kubernetes_configuration_state(kc_client, resource_group, cluster_rp, cluster_type, cluster_name, configuration_name, os.path.join(env_dict['RESULTS_DIR'], 'default.log'), timeout_seconds)
     print("The kubernetes configuration resource was created successfully.")
 
     # Loading in-cluster kube-config
     try:
-        config.load_incluster_config()
-        #config.load_kube_config()
+        custom_kubeconfig = env_dict['CUSTOM_KUBECONFIG']
+        if custom_kubeconfig:
+            config.load_kube_config(config_file=custom_kubeconfig)
+        else:
+            config.load_incluster_config()
     except Exception as e:
         pytest.fail("Error loading the in-cluster config: " + str(e))
 
     # Checking the status of namespaces created by the flux operator
-    check_namespace_status(env_dict['TEST_FLUX_CONFIGURATION_DEFAULT_LOG_FILE'], constants.DEFAULT_CASE_NAMESPACE_RESOURCE_LIST, timeout_seconds)
+    check_namespace_status(os.path.join(env_dict['RESULTS_DIR'], 'default.log'), constants.DEFAULT_CASE_NAMESPACE_RESOURCE_LIST, timeout_seconds)
 
     # Checking the status of pods created by the flux operator
-    check_kubernetes_pods_status(constants.FLUX_OPERATOR_RESOURCE_NAMESPACE, env_dict['TEST_FLUX_CONFIGURATION_DEFAULT_LOG_FILE'], constants.DEFAULT_CASE_RESOURCES_POD_LABEL_LIST, timeout_seconds)
+    check_kubernetes_pods_status(constants.FLUX_OPERATOR_RESOURCE_NAMESPACE, os.path.join(env_dict['RESULTS_DIR'], 'default.log'), constants.DEFAULT_CASE_RESOURCES_POD_LABEL_LIST, timeout_seconds)
     print("Successfully checked pod status of the flux operator and resources created by it.")
+
+    
