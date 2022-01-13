@@ -152,6 +152,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Ignore VSCode Files
+.vscode/
+
+# Ignore the results directory
+results/
+
 # Ignore the setup file
 setup-test.sh
 

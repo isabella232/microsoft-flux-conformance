@@ -8,3 +8,4 @@ export CLUSTER_NAME=conformance-testing-arc-$RANDOM
 export LOCATION=eastus
 export RESULTS_DIR=./results
 export CUSTOM_KUBECONFIG=~/.kube/config
+export NUM_TESTS=1

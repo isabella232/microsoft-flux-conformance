@@ -7,6 +7,7 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 RUN az extension add -n connectedk8s --yes --debug
 RUN az extension add -n k8s-extension --yes --debug
+RUN az config set core.only_show_errors=true
 
 RUN /usr/bin/curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
     && chmod +x ./kubectl  \

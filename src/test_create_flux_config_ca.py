@@ -1,5 +1,6 @@
 import pytest
 import os
+import base64
 from common.kubernetes_configuration_utility import (
     create_flux_configuration,
     create_flux_configuration_kustomization,
@@ -7,6 +8,9 @@ from common.kubernetes_configuration_utility import (
     get_flux_configuration_client,
 )
 import common.constants as constants
+from azure.mgmt.kubernetesconfiguration.v2022_01_01_preview.models import (
+    KustomizationDefinition,
+)
 
 from kubernetes import config
 from msrestazure import azure_cloud
@@ -55,14 +59,21 @@ def test_create_flux_config_default(env_dict):
     cluster_rp = constants.CLUSTER_RP
     cluster_type = constants.CLUSTER_TYPE
     repository_url = "https://github.com/Azure/arc-k8s-demo"
-    namespace = "default"
+    namespace = "https-ca"
     branch = "main"
-    configuration_name = "default"
+    configuration_name = "https-ca"
     scope = "cluster"
 
     kustomizations = {
-        'kustomization1': create_flux_configuration_kustomization('', [])
+        "infra": create_flux_configuration_kustomization("./infrastructure"),
+        "apps": create_flux_configuration_kustomization("./apps/staging", "infra"),
     }
+
+    # Base64 encode a ca cert from a file
+    encoded_ca_cert = None
+    with open(env_dict.get("CA_CERT_FILE"), "r") as f:
+        ca_cert = f.read()
+        encoded_ca_cert = base64.b64encode(ca_cert.encode("utf-8")).decode("utf-8")
 
     # Fetch aad token credentials from spn
     cloud = azure_cloud.get_cloud_from_metadata_endpoint(azure_rmendpoint)
@@ -90,6 +101,7 @@ def test_create_flux_config_default(env_dict):
         namespace,
         branch,
         scope,
+        encoded_ca_cert,
     )
     append_result_output(
         "Create config response: {}\n".format(put_kc_response),

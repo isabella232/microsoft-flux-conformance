@@ -1,3 +1,4 @@
+from azure.core.exceptions import HttpResponseError
 import pytest
 import time
 
@@ -167,6 +168,21 @@ def check_kubernetes_configuration_state(kc_client, resource_group, cluster_rp, 
             pytest.fail("ERROR: Timeout. The kubernetes configuration is in {} provisioning state and {} compliance state.".format(provisioning_state, compliance_state))
         time.sleep(10)
 
+def check_kubernetes_configuration_delete_state(kc_client, resource_group, cluster_rp, cluster_type, cluster_name, configuration_name,
+                                         outfile=None, timeout_seconds=300):
+    timeout = time.time() + timeout_seconds
+    while True:
+        try:
+            get_kc_response = kc_client.get(resource_group, cluster_rp, cluster_type, cluster_name, configuration_name)
+            provisioning_state = get_kc_response.provisioning_state
+            append_result_output("Kubernetes Configuration still exists with Provisioning State: {}\n".format(provisioning_state), outfile)
+        except HttpResponseError as e:
+            if e.status_code == 404:
+                append_result_output("Kubernetes Configuration {} successfully deleted\n".format(configuration_name), outfile)
+                break
+        if time.time() > timeout:
+            pytest.fail("ERROR: Timeout. The kubernetes configuration is in {} provisioning state and {} compliance state.".format(provisioning_state, compliance_state))
+        time.sleep(10)
 
 # Function to monitor the kubernetes secret. It will determine if the secret has been successfully created.
 def check_kubernetes_secret(secret_namespace, secret_name, timeout=300):
