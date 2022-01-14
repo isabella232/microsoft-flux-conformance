@@ -2,7 +2,7 @@ import pytest
 import os
 import pickle
 
-import common.constants as constants
+import constants as constants
 
 from filelock import FileLock
 from pathlib import Path
@@ -27,7 +27,7 @@ def env_dict():
                 results_dir = "/tmp/results"
             ca_cert_file = os.getenv("CA_CERT_FILE")
             if not ca_cert_file:
-                ca_cert_file = "./file/https-ca.cer"
+                ca_cert_file = "/test/file/https-ca.cer"
             env_dict["RESULTS_DIR"] = results_dir
             env_dict["CA_CERT_FILE"] = ca_cert_file
             env_dict["CUSTOM_KUBECONFIG"] = os.getenv("CUSTOM_KUBECONFIG")
@@ -94,33 +94,22 @@ def env_dict():
                 if namespace_name in cleanup_namespace_list:
                     delete_namespace(api_instance, namespace_name)
 
-            api_instance = client.AppsV1Api()
-            cleanup_deployment_list = constants.CLEANUP_DEPLOYMENT_LIST
-            deployment_list = list_deployment(
-                api_instance, constants.FLUX_OPERATOR_RESOURCE_NAMESPACE
-            )
-            for deployment in deployment_list.items:
-                deployment_name = deployment.metadata.name
-                if deployment_name in cleanup_deployment_list:
-                    delete_deployment(
-                        api_instance,
-                        constants.FLUX_OPERATOR_RESOURCE_NAMESPACE,
-                        deployment_name,
-                    )
+            for (
+                cleanup_service_ns,
+                cleanup_service_name,
+            ) in constants.CLEANUP_SERVICE_LIST:
+                api_instance.delete_namespaced_service(
+                    cleanup_service_name, cleanup_service_ns
+                )
 
-            api_instance = client.CoreV1Api()
-            cleanup_service_list = constants.CLEANUP_SERVICE_LIST
-            service_list = list_service(
-                api_instance, constants.FLUX_OPERATOR_RESOURCE_NAMESPACE
-            )
-            for service in service_list.items:
-                service_name = service.metadata.name
-                if service_name in cleanup_service_list:
-                    delete_service(
-                        api_instance,
-                        constants.FLUX_OPERATOR_RESOURCE_NAMESPACE,
-                        service_name,
-                    )
+            api_instance = client.AppsV1Api()
+            for (
+                cleanup_deployment_ns,
+                cleanup_deployment_name,
+            ) in constants.CLEANUP_DEPLOYMENT_LIST:
+                api_instance.delete_namespaced_deployment(
+                    cleanup_deployment_name, cleanup_deployment_ns
+                )
             print("Cleanup Complete.")
             return
 

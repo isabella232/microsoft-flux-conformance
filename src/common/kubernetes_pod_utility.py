@@ -20,14 +20,19 @@ def get_pod_list(api_instance, namespace, label_selector=""):
 
 
 # Function that watches events corresponding to pods in the given namespace and passes the events to a callback function
-def watch_pod_status(api_instance, namespace, timeout, callback=None):
+def watch_pod_status(api_instance, namespace=None, timeout=300, callback=None):
     if not callback:
         return
     try:
         w = watch.Watch()
-        for event in w.stream(api_instance.list_namespaced_pod, namespace, timeout_seconds=timeout):
-            if callback(event):
-                return
+        if not namespace:
+            for event in w.stream(api_instance.list_pod_for_all_namespaces, timeout_seconds=timeout):
+                if callback(event):
+                    return
+        else:
+            for event in w.stream(api_instance.list_namespaced_pod, namespace, timeout_seconds=timeout):
+                if callback(event):
+                    return
     except Exception as e:
         pytest.fail("Error occurred when checking pod status: " + str(e))
     pytest.fail("The watch on the pods has timed out. Please see the pod logs for more info.")

@@ -7,10 +7,7 @@ from common.kubernetes_configuration_utility import (
     delete_kubernetes_configuration,
     get_flux_configuration_client,
 )
-import common.constants as constants
-from azure.mgmt.kubernetesconfiguration.v2022_01_01_preview.models import (
-    KustomizationDefinition,
-)
+import constants as constants
 
 from kubernetes import config
 from msrestazure import azure_cloud
@@ -21,6 +18,7 @@ from helper import (
     check_kubernetes_configuration_delete_state,
     check_kubernetes_pods_status,
     check_kubernetes_configuration_state,
+    check_kubernetes_secret,
     check_namespace_status,
 )
 
@@ -28,7 +26,7 @@ pytestmark = pytest.mark.microsoftfluxtest
 
 
 # validate all the critical resources such as ds, rs, ds pods and rs pod etc. are up and running
-def test_create_flux_config_default(env_dict):
+def test_create_flux_config_https_ca(env_dict):
     tenant_id = env_dict.get("TENANT_ID")
     if not tenant_id:
         pytest.fail("ERROR: variable TENANT_ID is required.")
@@ -54,19 +52,19 @@ def test_create_flux_config_default(env_dict):
         pytest.fail("ERROR: variable CLIENT_SECRET is required.")
 
     azure_rmendpoint = env_dict.get("AZURE_RM_ENDPOINT")
-    log_file = "default.log"
+    log_file = "https_ca_cert.log"
 
     cluster_rp = constants.CLUSTER_RP
     cluster_type = constants.CLUSTER_TYPE
-    repository_url = "https://github.com/Azure/arc-k8s-demo"
-    namespace = "https-ca"
-    branch = "main"
-    configuration_name = "https-ca"
-    scope = "cluster"
+    repository_url = constants.CA_CERT_TEST_REPOSITORY_URL
+    namespace = constants.CA_CERT_TEST_NAMESPACE
+    branch = constants.CA_CERT_TEST_BRANCH
+    configuration_name = constants.CA_CERT_TEST_NAME
+    scope = constants.CA_CERT_TEST_SCOPE
 
     kustomizations = {
-        "infra": create_flux_configuration_kustomization("./infrastructure"),
-        "apps": create_flux_configuration_kustomization("./apps/staging", "infra"),
+        "infra": create_flux_configuration_kustomization("./infrastructure", []),
+        "apps": create_flux_configuration_kustomization("./apps/staging", ["infra"]),
     }
 
     # Base64 encode a ca cert from a file
@@ -87,7 +85,7 @@ def test_create_flux_config_default(env_dict):
         subscription_id,
         base_url=cloud.endpoints.resource_manager,
         credential_scopes=[cloud.endpoints.resource_manager + "/.default"],
-        api_version="2022-01-01-preview",
+        api_version=constants.FLUX_API_VERSION,
     )
     put_kc_response = create_flux_configuration(
         kc_client,
@@ -133,18 +131,23 @@ def test_create_flux_config_default(env_dict):
     except Exception as e:
         pytest.fail("Error loading the in-cluster config: " + str(e))
 
+    check_kubernetes_secret(
+        namespace, f"{configuration_name}-auth", timeout=timeout_seconds
+    )
+
     # Checking the status of namespaces created by the flux operator
     check_namespace_status(
         os.path.join(env_dict["RESULTS_DIR"], log_file),
-        constants.DEFAULT_CASE_NAMESPACE_RESOURCE_LIST,
+        constants.CA_CERT_CASE_NAMESPACE_RESOURCE_LIST,
         timeout_seconds,
     )
 
     # Checking the status of pods created by the flux operator
+    # for the HTTPS CA Cert case
     check_kubernetes_pods_status(
-        constants.FLUX_OPERATOR_RESOURCE_NAMESPACE,
+        None,
         os.path.join(env_dict["RESULTS_DIR"], log_file),
-        constants.DEFAULT_CASE_RESOURCES_POD_LABEL_LIST,
+        ["nginx-ingress-controller", "redis", "podinfo"],
         timeout_seconds,
     )
     print(

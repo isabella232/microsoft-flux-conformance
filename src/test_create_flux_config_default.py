@@ -6,7 +6,7 @@ from common.kubernetes_configuration_utility import (
     delete_kubernetes_configuration,
     get_flux_configuration_client,
 )
-import common.constants as constants
+import constants as constants
 
 from kubernetes import config
 from msrestazure import azure_cloud
@@ -54,15 +54,13 @@ def test_create_flux_config_default(env_dict):
 
     cluster_rp = constants.CLUSTER_RP
     cluster_type = constants.CLUSTER_TYPE
-    repository_url = "https://github.com/Azure/arc-k8s-demo"
-    namespace = "default"
-    branch = "main"
-    configuration_name = "default"
-    scope = "cluster"
+    repository_url = constants.DEFAULT_TEST_REPOSITORY_URL
+    namespace = constants.DEFAULT_TEST_NAMESPACE
+    branch = constants.DEFAULT_TEST_BRANCH
+    configuration_name = constants.DEFAULT_TEST_NAME
+    scope = constants.DEFAULT_TEST_SCOPE
 
-    kustomizations = {
-        'kustomization1': create_flux_configuration_kustomization('', [])
-    }
+    kustomizations = {"kustomization1": create_flux_configuration_kustomization("", [])}
 
     # Fetch aad token credentials from spn
     cloud = azure_cloud.get_cloud_from_metadata_endpoint(azure_rmendpoint)
@@ -76,7 +74,7 @@ def test_create_flux_config_default(env_dict):
         subscription_id,
         base_url=cloud.endpoints.resource_manager,
         credential_scopes=[cloud.endpoints.resource_manager + "/.default"],
-        api_version="2022-01-01-preview",
+        api_version=constants.FLUX_API_VERSION,
     )
     put_kc_response = create_flux_configuration(
         kc_client,
@@ -130,9 +128,9 @@ def test_create_flux_config_default(env_dict):
 
     # Checking the status of pods created by the flux operator
     check_kubernetes_pods_status(
-        constants.FLUX_OPERATOR_RESOURCE_NAMESPACE,
+        "default",
         os.path.join(env_dict["RESULTS_DIR"], log_file),
-        constants.DEFAULT_CASE_RESOURCES_POD_LABEL_LIST,
+        ["arc-k8s-demo"],
         timeout_seconds,
     )
     print(
