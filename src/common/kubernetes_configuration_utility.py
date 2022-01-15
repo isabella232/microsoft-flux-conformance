@@ -78,7 +78,7 @@ def create_flux_configuration(
             configuration_name,
             flux_configuration,
             polling=False,
-        )
+        ).result()
     except Exception as e:
         pytest.fail(
             "Error occurred while creating the kubernetes configuration resource: "
@@ -100,21 +100,17 @@ def delete_kubernetes_configuration(
     cluster_type,
     cluster_name,
     configuration_name,
+    force_delete=False,
 ):
-    try:
-        return kc_client.begin_delete(
-            resource_group_name,
-            cluster_rp,
-            cluster_type,
-            cluster_name,
-            configuration_name,
-            polling=False,
-        )
-    except Exception as e:
-        pytest.fail(
-            "Error occurred while fetching the kubernetes configuration resource: "
-            + str(e)
-        )
+    return kc_client.begin_delete(
+        resource_group_name,
+        cluster_rp,
+        cluster_type,
+        cluster_name,
+        configuration_name,
+        polling=False,
+        force_delete=force_delete,
+    )
 
 
 # This function gets a kubernetes configuration resource

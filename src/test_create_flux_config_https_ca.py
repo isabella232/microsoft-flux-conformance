@@ -154,15 +154,21 @@ def test_create_flux_config_https_ca(env_dict):
         "Successfully checked pod status of the flux operator and resources created by it."
     )
 
-    # Cleanup the flux configuration from the cluster
-    delete_kc_response = delete_kubernetes_configuration(
-        kc_client,
-        resource_group,
-        cluster_rp,
-        cluster_type,
-        cluster_name,
-        configuration_name,
-    )
+    try:
+        # Cleanup the flux configuration from the cluster
+        delete_kc_response = delete_kubernetes_configuration(
+            kc_client,
+            resource_group,
+            cluster_rp,
+            cluster_type,
+            cluster_name,
+            configuration_name,
+        ).result()
+    except Exception as e:
+        pytest.fail(
+            "Error occurred while fetching the kubernetes configuration resource: "
+            + str(e)
+        )
     append_result_output(
         "Delete config response: {}\n".format(delete_kc_response),
         os.path.join(env_dict["RESULTS_DIR"], log_file),

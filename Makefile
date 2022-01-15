@@ -1,6 +1,6 @@
 ACR ?= joinnisacr.azurecr.io
 IMAGE ?= microsoft-flux-conformance
-TAG ?= 0.0.4
+TAG ?= 0.0.6
 
 RESOURCE_GROUP ?= joinnis-test
 CLUSTER_NAME ?= sonobuoy-test

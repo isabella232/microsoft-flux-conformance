@@ -1,0 +1,15 @@
+sonobuoy run --wait --plugin azure-arc-kubernetes-conformance/src/plugins/core/conformance.yaml --plugin-env azure-arc-platform.TENANT_ID=$TENANT_ID \
+	--plugin-env azure-arc-platform.SUBSCRIPTION_ID=$SUBSCRIPTION_ID --plugin-env azure-arc-platform.RESOURCE_GROUP=$RESOURCE_GROUP \
+	--plugin-env azure-arc-platform.CLUSTER_NAME=$CLUSTER_NAME --plugin-env azure-arc-platform.LOCATION=$LOCATION \
+	--plugin-env azure-arc-platform.CLIENT_ID=$CLIENT_ID --plugin-env azure-arc-platform.CLIENT_SECRET=$CLIENT_SECRET \
+	--plugin-env azure-arc-platform.OBJECT_ID=$OBJECT_ID \
+	--plugin azure-arc-kubernetes-conformance/src/plugins/arc_agent_cleanup/arc_agent_cleanup.yaml --plugin-env azure-arc-agent-cleanup.TENANT_ID=$TENANT_ID \
+	--plugin-env azure-arc-agent-cleanup.SUBSCRIPTION_ID=$SUBSCRIPTION_ID --plugin-env azure-arc-agent-cleanup.RESOURCE_GROUP=$RESOURCE_GROUP \
+	--plugin-env azure-arc-agent-cleanup.CLUSTER_NAME=$CLUSTER_NAME --plugin-env azure-arc-agent-cleanup.CLEANUP_TIMEOUT=900 \
+	--plugin-env azure-arc-agent-cleanup.CLIENT_ID=$CLIENT_ID --plugin-env azure-arc-agent-cleanup.CLIENT_SECRET=$CLIENT_SECRET \
+    --plugin /mnt/c/Users/joinnis.REDMOND/github/microsoft-flux-conformance/conformance.yaml --plugin-env azure-arc-flux.TENANT_ID=$TENANT_ID \
+	--plugin-env azure-arc-flux.SUBSCRIPTION_ID=$SUBSCRIPTION_ID --plugin-env azure-arc-flux.RESOURCE_GROUP=$RESOURCE_GROUP \
+	--plugin-env azure-arc-flux.CLUSTER_NAME=$CLUSTER_NAME --plugin-env azure-arc-flux.LOCATION=$LOCATION \
+	--plugin-env azure-arc-flux.CLIENT_ID=$CLIENT_ID --plugin-env azure-arc-flux.CLIENT_SECRET=$CLIENT_SECRET \
+	--plugin-env azure-arc-flux.OBJECT_ID=$OBJECT_ID --plugin-env azure-arc-flux.CLUSTER_TYPE=connectedClusters \
+	--config azure-arc-kubernetes-conformance/src/plugins/common/config.json
