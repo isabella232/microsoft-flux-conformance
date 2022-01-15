@@ -22,6 +22,10 @@ get-dependencies:
 setup: get-dependencies
 	mkdir results
 
+clean:
+	rm results/*
+	rm *.pkl*
+
 login:
 	az login
 	az acr login --name $(ACR)
