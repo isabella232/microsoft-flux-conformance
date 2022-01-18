@@ -1,33 +1,49 @@
-# Project
+# Microsoft.Flux Conformance Testing
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+## Development
 
-As the maintainer of this project, please make a few updates:
+1. Setup a virtual environment for Python
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+```bash
+python -m venv env
+source env/bin/activate
+```
 
-## Contributing
+2. Create a `setup-test.sh` file in the format of `setup-test.template`
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+```bash
+export TENANT_ID=<TENANT-ID>
+export CLIENT_ID=<CLIENT-ID>
+export OBJECT_ID=<OBJECT-ID>
+export CLIENT_SECRET=<CLIENT-SECRET>
+export SUBSCRIPTION_ID=<SUBSCRIPTION-ID>
+export RESOURCE_GROUP=<RESOURCE-GROUP>
+export CLUSTER_NAME=conformance-testing-arc
+export LOCATION=eastus
+export RESULTS_DIR=./results
+export CUSTOM_KUBECONFIG=~/.kube/config
+export NUM_TESTS=1
+export CA_CERT_FILE=./src/file/https-ca.cer
+```
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+3. Source the `setup-test.sh` file to override the values in the `Makefile`
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+```bash
+source setup-test.sh
+```
 
-## Trademarks
+To be able to properly run the tests, you will need to create an SPN that has permission to operate over whichever resource group that you plan to create
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+4. Run the following command to setup the cluster and install the extension
+
+```bash
+make setup
+```
+
+You can take a look at the `Makefile` to see the exact configuration and the steps that are taken to configure the cluster
+
+5. Run the `test` command to validate the `pytest` tests that you have created work
+
+```bash
+make test
+```
