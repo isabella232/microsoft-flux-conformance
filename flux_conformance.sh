@@ -4,12 +4,12 @@ set -x
 results_dir="${RESULTS_DIR:-/tmp/results}"
 
 waitForResourcesReady() {
-    ready=false
-    max_retries=60
-    sleep_seconds=10
-    NAMESPACE=$1
-    RESOURCETYPE=$2
-	  RESOURCE=$3
+   ready=false
+   max_retries=60
+   sleep_seconds=10
+   NAMESPACE=$1
+   RESOURCETYPE=$2
+   RESOURCE=$3
     # if resource not specified, set to --all
     if [ -z $RESOURCE ]; then
        RESOURCE="--all"
@@ -53,7 +53,7 @@ waitForArcK8sClusterCreated() {
 
 waitForCIExtensionInstalled() {
     installedState=false
-    max_retries=60
+    max_retries=40
     sleep_seconds=10
     for i in $(seq 1 $max_retries)
     do
@@ -134,6 +134,25 @@ addArcK8sCLIExtension() {
    az extension add --name k8s-extension
 }
 
+waitForSonobuoy() {
+   sonobuoy status --json | jq -r '.plugins[] | select (.plugin == "azure-arc-platform")'.status
+
+   max_retries=60
+   sleep_seconds=10
+   for i in $(seq 1 $max_retries)
+   do
+      sonobuoyStatus=$(sonobuoy status --json | jq -r '.plugins[] | select (.plugin == "azure-arc-platform")'.status)
+      echo "sonobuoy status: ${sonobuoyStatus}"
+      if [ ! -z "$sonobuoyStatus" ]; then
+         if [ "${sonobuoyStatus}" == "complete" ]; then
+            break
+         fi
+      fi
+      sleep ${sleep_seconds}
+   done
+   echo "azure-arc-platform plugin has finished"
+}
+
 createArcCIExtension() {
 	echo "creating extension type: Microsoft.Flux"
   
@@ -147,7 +166,7 @@ createArcCIExtension() {
     --name flux \
     --config image-automation-controller.enabled=true \
     --config image-reflector-controller.enabled=true \
-    --no-wait 2> ${results_dir}/error || python3 setup_failure_handler.py 
+    --no-wait 2> ${results_dir}/error || python3 setup_failure_handler.py || exit 1
 }
 
 showArcCIExtension() {
@@ -168,7 +187,7 @@ login_to_azure() {
 	az login --service-principal \
 	-u ${CLIENT_ID} \
 	-p ${CLIENT_SECRET} \
-	--tenant ${TENANT_ID} 2> ${results_dir}/error || python3 setup_failure_handler.py
+	--tenant ${TENANT_ID} 2> ${results_dir}/error || python3 setup_failure_handler.py || exit 1
 
 	echo "setting subscription: ${SUBSCRIPTION_ID} as default subscription"
 	az account set -s $SUBSCRIPTION_ID
@@ -207,6 +226,9 @@ waitForResourcesReady azure-arc pods
 
 # wait for Arc K8s cluster to be created
 waitForArcK8sClusterCreated
+
+# wait for sonobuoy plugin to be finished
+waitForSonobuoy
 
 # add CLI extension
 addArcK8sCLIExtension

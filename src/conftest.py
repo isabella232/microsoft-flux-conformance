@@ -32,11 +32,6 @@ def env_dict():
     )
     conf_fixture_log = os.path.join(results_dir, "conf_fixture.log")
 
-    # Poll the completion of the arc-platform plugin
-    poll_arc_platform_completion(
-        conf_fixture_log, constants.ARC_PLATFORM_PLUGIN_POLL_TIMEOUT
-    )
-
     my_file = Path("env.pkl")  # File to store the environment variables.
     with FileLock(
         str(my_file) + ".lock"
@@ -166,79 +161,7 @@ def load_kube_config():
         else:
             config.load_incluster_config()
     except Exception as e:
-        pytest.fail("Error loading the in-cluster config: " + str(e))
-
-
-def poll_arc_platform_completion(log_file, polling_timeout):
-    # Checking presence of sonobuoy namespace
-    sonobuoy_namespace_present = False
-    load_kube_config()
-    api_instance = client.CoreV1Api()
-    namespace_list = list_namespace(api_instance)
-    for ns in namespace_list.items:
-        if ns.metadata.name.lower() == "sonobuoy":
-            sonobuoy_namespace_present = True
-            break
-
-    # Checking status of azure-arc plugins
-    cmd_sonobuoy_status = ["sonobuoy", "status", "--json"]
-    timeout = time.time() + polling_timeout
-    status_check_complete = False
-    if sonobuoy_namespace_present:
-        append_result_output(
-            "Polling on the azure-arc-platform plugin status...\n", log_file
-        )
-        while True:
-            # Calling 'sonobuoy status' command
-            response_sonobuoy_status = subprocess.Popen(
-                cmd_sonobuoy_status, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            (
-                output_sonobuoy_status,
-                error_sonobuoy_status,
-            ) = response_sonobuoy_status.communicate()
-            if response_sonobuoy_status.returncode != 0:
-                pytest.fail(
-                    "Unable to fetch sonobuoy plugin status: "
-                    + error_sonobuoy_status.decode("ascii")
-                )
-
-            # Parsing the json response to check plugin status
-            sonobuoy_status = output_sonobuoy_status.decode("ascii")
-            sonobuoy_status_json = json.loads(sonobuoy_status)
-            plugin_list = sonobuoy_status_json.get("plugins")
-            for plugin in plugin_list:
-                plugin_name = plugin.get("plugin")
-                plugin_status = plugin.get("status")
-                if plugin_name == "azure-arc-platform":
-                    if plugin_status == "complete":
-                        status_check_complete = True
-                    break
-
-            # Checking exit condition
-            if status_check_complete:
-                break
-
-            print("Polling on the completion of the arc-platform plugin")
-            append_result_output(
-                "Plugin azure-arc-platform has not completed with status {}\n".format(
-                    sonobuoy_status_json
-                ),
-                log_file,
-            )
-
-            # Checking cleanup timeout
-            if time.time() > timeout:
-                append_result_output(
-                    "Sonobuoy plugins status: {}\n".format(sonobuoy_status_json),
-                    log_file,
-                )
-                pytest.fail(
-                    "The watch on azure-arc-platform plugin status has timed out."
-                )
-
-            # Sleep for 20 sec
-            time.sleep(20)
+        pytest.fail("Error loading the in-cluster config: \n" + str(e))
 
 
 # Force delete the flux configurations from the cluster just in case there
@@ -280,5 +203,5 @@ def force_delete_configurations(
             ).result()
         except Exception as e:
             append_result_output(
-                "Error while deleting the configuration: " + str(e), log_file
+                "Error while deleting the configuration: \n" + str(e), log_file
             )

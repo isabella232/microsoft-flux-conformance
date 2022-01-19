@@ -1,6 +1,7 @@
 ACR ?= joinnisacr.azurecr.io
 IMAGE ?= microsoft-flux-conformance
-TAG ?= 0.0.6
+TAG ?= 0.0.11
+SONOBUOY_VERSION ?= 0.55.1
 
 RESOURCE_GROUP ?= joinnis-test
 CLUSTER_NAME ?= sonobuoy-test
@@ -34,8 +35,12 @@ login:
 	az acr login --name $(ACR)
 
 docker-build:
-	docker build . -t $(ACR)/$(IMAGE):$(TAG)
+	docker build . -t $(ACR)/$(IMAGE):$(TAG) --build-arg SONOBUOY_VERSION=$(SONOBUOY_VERSION)
+
+docker-push:
 	docker push $(ACR)/$(IMAGE):$(TAG)
+
+docker-all: docker-build docker-push
 
 test:
 	pytest ./src/
