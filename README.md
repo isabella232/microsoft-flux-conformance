@@ -1,5 +1,7 @@
 # Microsoft.Flux Conformance Testing
 
+[![Build Status](https://dev.azure.com/ClusterConfigurationAgent/ClusterConfigurationAgent/_apis/build/status/Microsoft.Flux%20Conformance?branchName=main)](https://dev.azure.com/ClusterConfigurationAgent/ClusterConfigurationAgent/_build/latest?definitionId=46&branchName=main)
+
 ## Development
 
 1. Setup a virtual environment for Python

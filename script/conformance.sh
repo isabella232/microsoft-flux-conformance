@@ -11,5 +11,5 @@ sonobuoy run --wait --plugin azure-arc-kubernetes-conformance/src/plugins/core/c
 	--plugin-env azure-arc-flux.SUBSCRIPTION_ID=$SUBSCRIPTION_ID --plugin-env azure-arc-flux.RESOURCE_GROUP=$RESOURCE_GROUP \
 	--plugin-env azure-arc-flux.CLUSTER_NAME=$CLUSTER_NAME --plugin-env azure-arc-flux.LOCATION=$LOCATION \
 	--plugin-env azure-arc-flux.CLIENT_ID=$CLIENT_ID --plugin-env azure-arc-flux.CLIENT_SECRET=$CLIENT_SECRET \
-	--plugin-env azure-arc-flux.OBJECT_ID=$OBJECT_ID --plugin-env azure-arc-flux.CLUSTER_TYPE=connectedClusters \
+	--plugin-env azure-arc-flux.OBJECT_ID=$OBJECT_ID \
 	--config azure-arc-kubernetes-conformance/src/plugins/common/config.json

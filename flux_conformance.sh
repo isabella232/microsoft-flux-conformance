@@ -58,7 +58,7 @@ waitForCIExtensionInstalled() {
     for i in $(seq 1 $max_retries)
     do
       echo "iteration: ${i}, clustername: ${CLUSTER_NAME}, resourcegroup: ${RESOURCE_GROUP}"
-      provisioningState=$(az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP  --cluster-type $CLUSTER_TYPE --name flux --query provisioningState -o json)
+      provisioningState=$(az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --cluster-type connectedClusters --name flux --query provisioningState -o json)
       provisioningState=$(echo $provisioningState | tr -d '"' | tr -d '"\r\n')
       echo "extension provisioning state: ${provisioningState}"
       if [ ! -z "$provisioningState" ]; then
@@ -102,26 +102,6 @@ validateArcConfTestParameters() {
 		echo "ERROR: parameter CLUSTER_NAME is required." > ${results_dir}/error
 		python3 setup_failure_handler.py
 	fi
-
-  if [ -z $CLUSTER_TYPE ]; then
-		echo "ERROR: parameter CLUSTER_TYPE is required." > ${results_dir}/error
-		python3 setup_failure_handler.py
-	fi
-
-  if [[ -z "${FLUX_RELEASE_TRAIN}" ]]; then
-  echo "ERROR: parameter FLUX_RELEASE_TRAIN is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
-  fi
-
-  if [[ -z "${FLUX_RELEASE_NAMESPACE}" ]]; then
-    echo "ERROR: parameter FLUX_RELEASE_NAMESPACE is required." > ${results_dir}/error
-    python3 setup_failure_handler.py
-  fi
-
-  if [[ -z "${FLUX_VERSION}" ]]; then
-    echo "ERROR: parameter FLUX_VERSION is required." > ${results_dir}/error
-    python3 setup_failure_handler.py
-  fi
 }
 
 addArcConnectedK8sExtension() {
@@ -171,12 +151,12 @@ createArcCIExtension() {
 
 showArcCIExtension() {
   echo "arc ci extension status"
-  az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --cluster-type $CLUSTER_TYPE --name flux
+  az k8s-extension show  --cluster-name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --cluster-type connectedClusters --name flux
 }
 
 deleteArcCIExtension() {
     az k8s-extension delete --name flux \
-    --cluster-type $CLUSTER_TYPE \
+    --cluster-type connectedClusters \
 	  --cluster-name $CLUSTER_NAME \
 	  --resource-group $RESOURCE_GROUP --yes
 }

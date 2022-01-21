@@ -3,8 +3,7 @@ sonobuoy-config:
   plugin-name: azure-arc-flux
   result-format: junit
 spec:
-  image: azurearcfork8sdev.azurecr.io/microsoft-flux-conformance:latest
-  imagePullPolicy: Always
+  image: azurearcfork8sdev.azurecr.io/microsoft-flux-conformance:0.1.1
   name: plugin
   resources: {}
   volumes:
