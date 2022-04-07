@@ -24,7 +24,7 @@ export CLUSTER_NAME=conformance-testing-arc
 export LOCATION=eastus
 export RESULTS_DIR=./results
 export CUSTOM_KUBECONFIG=~/.kube/config
-export NUM_TESTS=1
+export NUM_TESTS=2
 export CA_CERT_FILE=./src/file/https-ca.cer
 ```
 

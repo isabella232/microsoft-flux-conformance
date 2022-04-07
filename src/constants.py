@@ -5,7 +5,7 @@ HELM_RELEASE_NAMESPACE = "default"
 TIMEOUT = 360
 ARC_PLATFORM_PLUGIN_POLL_TIMEOUT = 900
 
-FLUX_API_VERSION = "2022-01-01-preview"
+FLUX_API_VERSION = "2022-03-01"
 
 AZURE_ARC_NAMESPACE = "azure-arc"
 
@@ -19,8 +19,8 @@ DEFAULT_TEST_NAME = "default"
 DEFAULT_TEST_SCOPE = "cluster"
 
 CA_CERT_TEST_REPOSITORY_URL = "https://gitops-bitbucket-test-server.eastus.cloudapp.azure.com/scm/git/flux2-kustomize-helm-example.git"
-CA_CERT_TEST_NAMESPACE = "https-ca"
-CA_CERT_TEST_BRANCH = "main"
+CA_CERT_TEST_NAMESPACE = "cluster-config"
+CA_CERT_TEST_BRANCH = "multi-tenancy"
 CA_CERT_TEST_NAME = "https-ca"
 CA_CERT_TEST_SCOPE = "cluster"
 

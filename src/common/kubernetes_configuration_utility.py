@@ -1,12 +1,11 @@
 import pytest
 
 from azure.mgmt.kubernetesconfiguration import SourceControlConfigurationClient
-from azure.mgmt.kubernetesconfiguration.v2022_01_01_preview.models import (
+from azure.mgmt.kubernetesconfiguration.v2022_03_01.models import (
     FluxConfiguration,
     GitRepositoryDefinition,
     RepositoryRefDefinition,
-    KustomizationDefinition,
-    DependsOnDefinition,
+    KustomizationDefinition
 )
 
 
@@ -89,7 +88,7 @@ def create_flux_configuration(
 def create_flux_configuration_kustomization(path, deps):
     return KustomizationDefinition(
         path=path,
-        depends_on=[DependsOnDefinition(kustomization_name=dep) for dep in deps],
+        depends_on=deps,
     )
 
 

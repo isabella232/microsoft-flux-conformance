@@ -6,4 +6,4 @@ kubernetes
 azure.identity
 msrestazure
 azure-mgmt-hybridkubernetes
-azure-mgmt-kubernetesconfiguration==1.0.0
+azure-mgmt-kubernetesconfiguration==2.0.0
