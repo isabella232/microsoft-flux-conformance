@@ -147,7 +147,7 @@ def test_create_flux_config_https_ca(env_dict):
     check_kubernetes_pods_status(
         None,
         os.path.join(env_dict["RESULTS_DIR"], log_file),
-        ["nginx-ingress-controller", "redis", "podinfo"],
+        ["nginx-nginx", "redis-redis", "podinfo-podinfo"],
         timeout_seconds,
     )
     print(
