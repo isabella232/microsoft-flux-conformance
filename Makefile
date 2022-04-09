@@ -24,8 +24,8 @@ create-extension:
 	az k8s-extension create -g $(RESOURCE_GROUP) -c $(CLUSTER_NAME) -n $(EXTENSION_NAME) -t $(CLUSTER_TYPE) --extension-type microsoft.flux
 
 clean:
-	rm results/*
 	rm *.pkl*
+	rm results/*
 
 clean-cluster:
 	az connectedk8s delete -g $(RESOURCE_GROUP) -n $(CLUSTER_NAME)

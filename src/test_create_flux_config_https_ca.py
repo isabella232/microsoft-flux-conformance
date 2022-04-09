@@ -11,6 +11,7 @@ import constants as constants
 
 from kubernetes import config
 from msrestazure import azure_cloud
+from msrest import Serializer
 
 from common.arm_rest_utility import fetch_aad_token_credentials
 from common.results_utility import append_result_output
@@ -102,7 +103,7 @@ def test_create_flux_config_https_ca(env_dict):
         encoded_ca_cert,
     )
     append_result_output(
-        "Create config response: {}\n".format(put_kc_response),
+        "PUT config response: {}\n".format(Serializer().serialize_data(put_kc_response, 'FluxConfiguration', keep_readonly=True)),
         os.path.join(env_dict["RESULTS_DIR"], log_file),
     )
     print("Successfully requested the creation of kubernetes configuration resource.")

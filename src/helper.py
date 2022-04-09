@@ -1,6 +1,8 @@
 from azure.core.exceptions import HttpResponseError
+from msrest import Serializer
 import pytest
 import time
+import json
 
 from kubernetes import client
 from common.kubernetes_crd_utility import watch_crd_instance
@@ -215,12 +217,9 @@ def check_kubernetes_configuration_state(
             cluster_name,
             configuration_name,
         )
+        append_result_output('GET config response: {}\n'.format(Serializer().serialize_data(get_kc_response, 'FluxConfiguration', keep_readonly=True)), outfile)
         provisioning_state = get_kc_response.provisioning_state
-        append_result_output(
-            "Provisioning State: {}\n".format(provisioning_state), outfile
-        )
         compliance_state = get_kc_response.compliance_state or "Unknown"
-        append_result_output("Compliance State: {}\n".format(compliance_state), outfile)
         if provisioning_state == "Succeeded" and compliance_state == "Compliant":
             break
         if provisioning_state == "Failed" or provisioning_state == "Cancelled":
