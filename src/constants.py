@@ -8,6 +8,7 @@ ARC_PLATFORM_PLUGIN_POLL_TIMEOUT = 900
 FLUX_API_VERSION = "2022-03-01"
 
 AZURE_ARC_NAMESPACE = "azure-arc"
+FLUX_SYSTEM_NAMESPACE = "flux-system"
 
 CLUSTER_TYPE = "connectedClusters"
 CLUSTER_RP = "Microsoft.Kubernetes"

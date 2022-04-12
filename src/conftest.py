@@ -1,12 +1,9 @@
-import time
-import json
 from re import L
 from common.results_utility import append_result_output
 from msrestazure import azure_cloud
 import pytest
 import os
 import pickle
-import subprocess
 from common.arm_rest_utility import fetch_aad_token_credentials
 from common.kubernetes_configuration_utility import (
     delete_kubernetes_configuration,
@@ -18,9 +15,8 @@ import constants as constants
 from filelock import FileLock
 from pathlib import Path
 from kubernetes import client, config
+from common.kubernetes_pod_utility import get_pod_list, get_pod_logs
 from common.kubernetes_namespace_utility import list_namespace, delete_namespace
-from common.kubernetes_deployment_utility import list_deployment, delete_deployment
-from common.kubernetes_service_utility import list_service, delete_service
 
 pytestmark = pytest.mark.microsoftfluxtest
 
@@ -30,6 +26,7 @@ def env_dict():
     results_dir = (
         os.getenv("RESULTS_DIR") if os.getenv("RESULTS_DIR") else "/tmp/results"
     )
+    pod_log_dir = os.path.join(results_dir, "pods")
     conf_fixture_log = os.path.join(results_dir, "conf_fixture.log")
 
     my_file = Path("env.pkl")  # File to store the environment variables.
@@ -90,6 +87,9 @@ def env_dict():
 
             load_kube_config()
             api_instance = client.CoreV1Api()
+
+            # Before we cleanup everything, let's get a log dump from the pods
+            log_dump_extension(results_dir, api_instance)
 
             # Cleaning up resources created by default configurations
             append_result_output(
@@ -162,6 +162,21 @@ def load_kube_config():
             config.load_incluster_config()
     except Exception as e:
         pytest.fail("Error loading the in-cluster config: \n" + str(e))
+
+
+# Get a log dump from the extension before cleaning up everything
+def log_dump_extension(results_dir, api_instance):
+    # Collecting all arc-agent pod logs
+    print("Collecting flux-system extension pod logs.")
+    pod_list = get_pod_list(api_instance, constants.FLUX_SYSTEM_NAMESPACE)
+    for pod in pod_list.items:
+      pod_name = pod.metadata.name
+      for container in pod.spec.containers:
+        container_name = container.name
+        log_file = os.path.join(results_dir, "pod_logs", pod_name, "{}.log".format(container_name))
+        log = get_pod_logs(api_instance, constants.FLUX_SYSTEM_NAMESPACE, pod_name, container_name)
+        append_result_output("Logs for the pod {} and container {}:\n".format(pod_name, container_name), log_file)
+        append_result_output("{}\n".format(log), log_file)
 
 
 # Force delete the flux configurations from the cluster just in case there

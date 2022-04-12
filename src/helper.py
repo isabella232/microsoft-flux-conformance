@@ -223,17 +223,17 @@ def check_kubernetes_configuration_state(
         if provisioning_state == "Succeeded" and compliance_state == "Compliant":
             break
         if provisioning_state == "Failed" or provisioning_state == "Cancelled":
-            pytest.fail(
-                "ERROR: The kubernetes configuration creation finished with terminal provisioning state {}. ".format(
+            error_message = "ERROR: The kubernetes configuration creation finished with terminal provisioning state {}. ".format(
                     provisioning_state
                 )
-            )
+            append_result_output(error_message, outfile)
+            pytest.fail(error_message)
         if time.time() > timeout:
-            pytest.fail(
-                "ERROR: Timeout. The kubernetes configuration is in {} provisioning state and {} compliance state.".format(
+            error_message = "ERROR: Timeout. The kubernetes configuration is in {} provisioning state and {} compliance state.".format(
                     provisioning_state, compliance_state
                 )
-            )
+            append_result_output(error_message, outfile)
+            pytest.fail(error_message)
         time.sleep(10)
 
 
