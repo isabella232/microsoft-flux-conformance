@@ -275,8 +275,8 @@ def check_kubernetes_configuration_delete_state(
                 break
         if time.time() > timeout:
             pytest.fail(
-                "ERROR: Timeout. The kubernetes configuration is in {} provisioning state and {} compliance state.".format(
-                    provisioning_state, compliance_state
+                "ERROR: Timeout. The kubernetes configuration is in {} provisioning state.".format(
+                    provisioning_state
                 )
             )
         time.sleep(10)

@@ -89,7 +89,7 @@ def env_dict():
             api_instance = client.CoreV1Api()
 
             # Before we cleanup everything, let's get a log dump from the pods
-            log_dump_extension(results_dir, api_instance)
+            log_dump_extension(pod_log_dir, api_instance)
 
             # Cleaning up resources created by default configurations
             append_result_output(
@@ -165,7 +165,7 @@ def load_kube_config():
 
 
 # Get a log dump from the extension before cleaning up everything
-def log_dump_extension(results_dir, api_instance):
+def log_dump_extension(pod_log_dir, api_instance):
     # Collecting all arc-agent pod logs
     print("Collecting flux-system extension pod logs.")
     pod_list = get_pod_list(api_instance, constants.FLUX_SYSTEM_NAMESPACE)
@@ -173,7 +173,7 @@ def log_dump_extension(results_dir, api_instance):
       pod_name = pod.metadata.name
       for container in pod.spec.containers:
         container_name = container.name
-        log_file = os.path.join(results_dir, "pod_logs", pod_name, "{}.log".format(container_name))
+        log_file = os.path.join(pod_log_dir, pod_name, "{}.log".format(container_name))
         log = get_pod_logs(api_instance, constants.FLUX_SYSTEM_NAMESPACE, pod_name, container_name)
         append_result_output("Logs for the pod {} and container {}:\n".format(pod_name, container_name), log_file)
         append_result_output("{}\n".format(log), log_file)
