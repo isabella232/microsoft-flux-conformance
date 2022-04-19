@@ -49,3 +49,24 @@ You can take a look at the `Makefile` to see the exact configuration and the ste
 ```bash
 make test
 ```
+
+
+## Notes
+
+### Running Conformance Tests on OpenShift Clusters
+
+In order to run this conformance test suite on OpenShift clusters, you will need to add the following security context constraints to the cluster
+
+```bash
+NS="flux-system"
+oc adm policy add-scc-to-user nonroot system:serviceaccount:$NS:kustomize-controller
+oc adm policy add-scc-to-user nonroot system:serviceaccount:$NS:helm-controller
+oc adm policy add-scc-to-user nonroot system:serviceaccount:$NS:source-controller
+oc adm policy add-scc-to-user nonroot system:serviceaccount:$NS:notification-controller
+oc adm policy add-scc-to-user nonroot system:serviceaccount:$NS:image-automation-controller
+oc adm policy add-scc-to-user nonroot system:serviceaccount:$NS:image-reflector-controller
+oc adm policy add-scc-to-user privileged system:serviceaccount:nginx:nginx-nginx-nginx-ingress-controller
+oc adm policy add-scc-to-user nonroot system:serviceaccount:redis:default
+```
+
+The `flux` controllers and the `nginx` and `redis` deployments need additional permissions on the OpenShift clusters in order to come up and run properly.
